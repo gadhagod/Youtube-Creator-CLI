@@ -1,0 +1,6 @@
+token.pickle
+__pycache__
+client_secret.json
+*.egg-info
+build
+dist

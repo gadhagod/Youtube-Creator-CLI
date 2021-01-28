@@ -1,0 +1,39 @@
+#!/usr/bin/env python
+import click
+import pickle
+import os.path
+from os import getenv, mkdir
+from googleapiclient.discovery import build
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+
+import youtube
+from video import video
+from channel import channel
+
+@click.group()
+def yt():
+    'Youtube CLI for creators'
+
+@yt.command(help='Authorize your youtube account')
+@click.argument('secret-file', type=click.Path(exists=True), default='{}/client_secret.json'.format(getenv('HOME')))
+def login(secret_file):
+    SCOPES = ['https://www.googleapis.com/auth/youtube']
+    if not os.path.exists(secret_file):
+        print(youtube.colors + secret_file + youtube.colors.end)
+        exit()
+    flow = InstalledAppFlow.from_client_secrets_file(secret_file, SCOPES)
+    creds = flow.run_local_server()
+    if not os.path.exists(getenv('HOME') + '/.youtube-creators-cli'):
+        mkdir(getenv('HOME') + '/.youtube-creators-cli')
+    pickle.dump(creds, open(getenv('HOME') + '/.youtube-creators-cli/token.pickle', 'wb'))
+
+@yt.command()
+def whoami():
+    'Verify authentication'
+    print(youtube.get_me()['snippet']['title'])
+
+yt.add_command(channel)
+yt.add_command(video)
+
+yt()
